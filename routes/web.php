@@ -35,3 +35,5 @@ Route::prefix('admin')->middleware('admin')->group(function () {
     Route::resource('orders', OrderController::class);
     Route::resource('users', UserController::class);
 });
+
+

@@ -11,7 +11,7 @@
     <!-- Navigation Bar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
-            <a class="navbar-brand" href="{{ route('home') }}">
+            <a class="navbar-brand" href="{{ url('/') }}">
                 <strong>⚡ Electro Mart</strong>
             </a>
 
@@ -22,44 +22,44 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}" href="{{ route('home') }}">Home</a>
+                        <a class="nav-link {{ request()->is('/') ? 'active' : '' }}" href="{{ url('/') }}">Home</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('products.*') ? 'active' : '' }}" href="{{ route('products.index') }}">Products</a>
+                        <a class="nav-link {{ request()->is('products*') ? 'active' : '' }}" href="{{ url('/products') }}">Products</a>
                     </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                             Categories
                         </a>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="#">Smartphones</a></li>
-                            <li><a class="dropdown-item" href="#">Laptops</a></li>
-                            <li><a class="dropdown-item" href="#">Gaming</a></li>
-                            <li><a class="dropdown-item" href="#">Accessories</a></li>
+                            <li><a class="dropdown-item" href="{{ url('/products?category=smartphones') }}">Smartphones</a></li>
+                            <li><a class="dropdown-item" href="{{ url('/products?category=laptops') }}">Laptops</a></li>
+                            <li><a class="dropdown-item" href="{{ url('/products?category=gaming') }}">Gaming</a></li>
+                            <li><a class="dropdown-item" href="{{ url('/products?category=accessories') }}">Accessories</a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{{ route('products.index') }}">All Products</a></li>
+                            <li><a class="dropdown-item" href="{{ url('/products') }}">All Products</a></li>
                         </ul>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">About</a>
+                        <a class="nav-link" href="{{ url('/about') }}">About</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">Contact</a>
+                        <a class="nav-link" href="{{ url('/contact') }}">Contact</a>
                     </li>
                 </ul>
 
                 <ul class="navbar-nav ms-auto">
                     <!-- Search Form -->
                     <li class="nav-item me-3">
-                        <form class="d-flex" role="search">
-                            <input class="form-control me-2" type="search" placeholder="Search products..." style="width: 200px;">
+                        <form class="d-flex" role="search" action="{{ url('/products') }}" method="GET">
+                            <input class="form-control me-2" type="search" name="search" placeholder="Search products..." style="width: 200px;" value="{{ request('search') }}">
                             <button class="btn btn-outline-light" type="submit">Search</button>
                         </form>
                     </li>
 
                     <!-- Cart -->
                     <li class="nav-item">
-                        <a class="nav-link position-relative" href="#">
+                        <a class="nav-link position-relative" href="{{ url('/cart') }}">
                             🛒 Cart
                             <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
                                 0
@@ -70,29 +70,27 @@
                     <!-- Authentication Links -->
                     @guest
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ route('login') }}">Login</a>
+                            <a class="nav-link" href="{{ url('/login') }}">Login</a>
                         </li>
-                        @if (Route::has('register'))
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ route('register') }}">Register</a>
-                            </li>
-                        @endif
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url('/register') }}">Register</a>
+                        </li>
                     @else
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                                 {{ Auth::user()->name }}
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="{{ route('dashboard') }}">Dashboard</a></li>
-                                <li><a class="dropdown-item" href="#">Profile</a></li>
-                                <li><a class="dropdown-item" href="#">Orders</a></li>
+                                <li><a class="dropdown-item" href="{{ url('/dashboard') }}">Dashboard</a></li>
+                                <li><a class="dropdown-item" href="{{ url('/profile') }}">Profile</a></li>
+                                <li><a class="dropdown-item" href="{{ url('/orders') }}">Orders</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
-                                    <a class="dropdown-item" href="{{ route('logout') }}"
+                                    <a class="dropdown-item" href="{{ url('/logout') }}"
                                        onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                                         Logout
                                     </a>
-                                    <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                                    <form id="logout-form" action="{{ url('/logout') }}" method="POST" class="d-none">
                                         @csrf
                                     </form>
                                 </li>
@@ -109,7 +107,7 @@
         <div class="container text-center">
             <h1 class="display-4 fw-bold">Welcome to Electro Mart</h1>
             <p class="lead">Your one-stop shop for all electronic needs</p>
-            <a href="{{ route('products.index') }}" class="btn btn-light btn-lg">Shop Now</a>
+            <a href="{{ url('/products') }}" class="btn btn-light btn-lg">Shop Now</a>
         </div>
     </div>
 
@@ -138,8 +136,8 @@
                                         <small class="text-muted">Stock: {{ $product->stock }}</small>
                                     </div>
                                     <div class="mt-2">
-                                        <a href="{{ route('products.show', $product->id) }}" class="btn btn-primary btn-sm">View Details</a>
-                                        <button class="btn btn-outline-primary btn-sm">Add to Cart</button>
+                                        <a href="{{ url('/products/' . $product->id) }}" class="btn btn-primary btn-sm">View Details</a>
+                                        <button class="btn btn-outline-primary btn-sm" onclick="addToCart({{ $product->id }})">Add to Cart</button>
                                     </div>
                                 </div>
                             </div>
@@ -151,6 +149,7 @@
             <div class="text-center py-5">
                 <h4>No products available at the moment</h4>
                 <p class="text-muted">Please check back later!</p>
+                <a href="{{ url('/products') }}" class="btn btn-primary">Browse All Products</a>
             </div>
         @endif
     </div>
@@ -171,6 +170,11 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="{{ asset('js/app.js') }}"></script>
+    <script>
+        function addToCart(productId) {
+            // Add to cart functionality - you can implement this later
+            alert('Product added to cart! (Feature coming soon)');
+        }
+    </script>
 </body>
 </html>
