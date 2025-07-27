@@ -3,16 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - {{ config('app.name') }}</title>
+    <title>{{ config('app.name') }} - Your Electronics Store</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .hero-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 80px 0;
+        }
+        .product-card {
+            transition: transform 0.3s ease;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+        }
+        .feature-icon {
+            font-size: 3rem;
+            color: #667eea;
+        }
+    </style>
 </head>
 <body>
-    <!-- Navigation Bar -->
+    <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
-            <a class="navbar-brand" href="{{ url('/') }}">
-                <strong>⚡ Electro Mart</strong>
+            <a class="navbar-brand fw-bold" href="{{ route('home') }}">
+                <i class="fas fa-bolt"></i> ElectroMart
             </a>
 
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -22,300 +39,251 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url('/') }}">Home</a>
+                        <a class="nav-link" href="{{ route('home') }}">Home</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url('/products') }}">Products</a>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            Categories
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="{{ url('/products?category=smartphones') }}">Smartphones</a></li>
-                            <li><a class="dropdown-item" href="{{ url('/products?category=laptops') }}">Laptops</a></li>
-                            <li><a class="dropdown-item" href="{{ url('/products?category=gaming') }}">Gaming</a></li>
-                            <li><a class="dropdown-item" href="{{ url('/products?category=accessories') }}">Accessories</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{{ url('/products') }}">All Products</a></li>
-                        </ul>
+                        <a class="nav-link" href="{{ route('products.index') }}">Products</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url('/about') }}">About</a>
+                        <a class="nav-link" href="{{ route('about') }}">About</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url('/contact') }}">Contact</a>
+                        <a class="nav-link" href="{{ route('contact') }}">Contact</a>
                     </li>
                 </ul>
 
-                <ul class="navbar-nav ms-auto">
-                    <!-- Search Form -->
-                    <li class="nav-item me-3">
-                        <form class="d-flex" role="search" action="{{ url('/products') }}" method="GET">
-                            <input class="form-control me-2" type="search" name="search" placeholder="Search products..." style="width: 200px;" value="{{ request('search') }}">
-                            <button class="btn btn-outline-light" type="submit">Search</button>
-                        </form>
-                    </li>
-
-                    <!-- Cart -->
+                <ul class="navbar-nav">
                     <li class="nav-item">
-                        <a class="nav-link position-relative" href="{{ url('/cart') }}">
-                            🛒 Cart
-                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                0
-                            </span>
+                        <a class="nav-link" href="{{ route('cart.index') }}">
+                            <i class="fas fa-shopping-cart"></i> Cart
                         </a>
                     </li>
 
-                    <!-- Authentication Links -->
-                    @guest
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url('/login') }}">Login</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url('/register') }}">Register</a>
-                        </li>
-                    @else
-                        <!-- Admin Panel Link (only for admin users) -->
-                        @if(Auth::user()->role === 'admin')
-                            <li class="nav-item">
-                                <a class="nav-link text-warning" href="{{ route('admin.dashboard') }}">
-                                    <strong>⚙️ Admin Panel</strong>
-                                </a>
-                            </li>
-                        @endif
-
+                    @auth
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                {{ Auth::user()->name }}
+                                <i class="fas fa-user"></i> {{ Auth::user()->name }}
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="{{ url('/dashboard') }}">Dashboard</a></li>
-                                <li><a class="dropdown-item" href="{{ url('/profile') }}">Profile</a></li>
-                                <li><a class="dropdown-item" href="{{ url('/orders') }}">Orders</a></li>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{{ route('dashboard') }}">Dashboard</a></li>
+                                <li><a class="dropdown-item" href="{{ route('profile') }}">Profile</a></li>
+                                <li><a class="dropdown-item" href="{{ route('orders') }}">My Orders</a></li>
                                 @if(Auth::user()->role === 'admin')
                                     <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item text-warning" href="{{ route('admin.dashboard') }}">Admin Panel</a></li>
+                                    <li><a class="dropdown-item" href="{{ route('admin.dashboard') }}">Admin Panel</a></li>
                                 @endif
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
-                                    <a class="dropdown-item" href="{{ url('/logout') }}"
+                                    <a class="dropdown-item" href="{{ route('logout') }}"
                                        onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                                         Logout
                                     </a>
-                                    <form id="logout-form" action="{{ url('/logout') }}" method="POST" class="d-none">
+                                    <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
                                         @csrf
                                     </form>
                                 </li>
                             </ul>
                         </li>
-                    @endguest
+                    @else
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('login') }}">Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('register') }}">Register</a>
+                        </li>
+                    @endauth
                 </ul>
             </div>
         </div>
     </nav>
 
-    <!-- Welcome Header -->
-    <div class="bg-primary text-white py-4">
-        <div class="container">
-            <div class="row align-items-center">
-                <div class="col-md-8">
-                    <h1 class="display-6 fw-bold mb-2">Welcome back, {{ Auth::user()->name }}! 👋</h1>
-                    <p class="lead mb-0">Manage your account, track orders, and discover new products</p>
-                </div>
-                <div class="col-md-4 text-md-end">
-                    <span class="badge bg-light text-primary fs-6">{{ ucfirst(Auth::user()->role) }} Account</span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Dashboard Content -->
-    <div class="container my-5">
-        <!-- Quick Stats -->
-        <div class="row g-4 mb-5">
-            <div class="col-md-3">
-                <div class="card text-center border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
-                            <span class="h4 mb-0">📦</span>
-                        </div>
-                        <h4 class="mt-3 mb-1">{{ Auth::user()->orders()->count() }}</h4>
-                        <p class="text-muted mb-0">Total Orders</p>
+    @auth
+        <!-- Welcome Header for Authenticated Users -->
+        <div class="bg-primary text-white py-4">
+            <div class="container">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h1 class="display-6 fw-bold mb-2">Welcome back, {{ Auth::user()->name }}! 👋</h1>
+                        <p class="lead mb-0">Manage your account, track orders, and discover new products</p>
                     </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card text-center border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
-                            <span class="h4 mb-0">✅</span>
-                        </div>
-                        <h4 class="mt-3 mb-1">{{ Auth::user()->orders()->where('status', 'delivered')->count() }}</h4>
-                        <p class="text-muted mb-0">Delivered</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card text-center border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="bg-warning text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
-                            <span class="h4 mb-0">🚚</span>
-                        </div>
-                        <h4 class="mt-3 mb-1">{{ Auth::user()->orders()->whereIn('status', ['pending', 'processing', 'shipped'])->count() }}</h4>
-                        <p class="text-muted mb-0">In Progress</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card text-center border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="bg-info text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
-                            <span class="h4 mb-0">💰</span>
-                        </div>
-                        <h4 class="mt-3 mb-1">${{ number_format(Auth::user()->orders()->sum('total_amount'), 2) }}</h4>
-                        <p class="text-muted mb-0">Total Spent</p>
+                    <div class="col-md-4 text-md-end">
+                        <span class="badge bg-light text-primary fs-6">{{ ucfirst(Auth::user()->role) }} Account</span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Main Dashboard Cards -->
-        <div class="row g-4 mb-5">
-            <div class="col-lg-4">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-body text-center">
-                        <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
-                            <span class="display-6">👤</span>
-                        </div>
-                        <h5 class="card-title">My Profile</h5>
-                        <p class="card-text text-muted">Update your personal information, change password, and manage account settings</p>
-                        <a href="{{ url('/profile') }}" class="btn btn-primary">Manage Profile</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-4">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-body text-center">
-                        <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
-                            <span class="display-6">📋</span>
-                        </div>
-                        <h5 class="card-title">My Orders</h5>
-                        <p class="card-text text-muted">Track your current orders, view order history, and download invoices</p>
-                        <a href="{{ url('/orders') }}" class="btn btn-success">View Orders</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-4">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-body text-center">
-                        <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
-                            <span class="display-6">🛒</span>
-                        </div>
-                        <h5 class="card-title">Shopping Cart</h5>
-                        <p class="card-text text-muted">Review items in your cart and proceed to checkout when ready</p>
-                        <a href="{{ url('/cart') }}" class="btn btn-warning">View Cart</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Recent Orders -->
-        @if(Auth::user()->orders()->count() > 0)
+        <!-- Dashboard Content for Authenticated Users -->
+        <div class="container my-5">
             <div class="row">
-                <div class="col-12">
-                    <div class="card shadow-sm">
-                        <div class="card-header d-flex justify-content-between align-items-center">
-                            <h5 class="mb-0">Recent Orders</h5>
-                            <a href="{{ url('/orders') }}" class="btn btn-primary btn-sm">View All Orders</a>
-                        </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
                         <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-hover">
-                                    <thead>
-                                        <tr>
-                                            <th>Order #</th>
-                                            <th>Date</th>
-                                            <th>Total</th>
-                                            <th>Status</th>
-                                            <th>Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach(Auth::user()->orders()->latest()->take(5)->get() as $order)
-                                            <tr>
-                                                <td><strong>#{{ $order->id }}</strong></td>
-                                                <td>{{ $order->created_at->format('M d, Y') }}</td>
-                                                <td><strong>${{ number_format($order->total_amount, 2) }}</strong></td>
-                                                <td>
-                                                    <span class="badge bg-{{
-                                                        $order->status == 'delivered' ? 'success' :
-                                                        ($order->status == 'cancelled' ? 'danger' :
-                                                        ($order->status == 'shipped' ? 'info' : 'warning'))
-                                                    }}">
-                                                        {{ ucfirst($order->status) }}
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <a href="{{ url('/orders/' . $order->id) }}" class="btn btn-outline-primary btn-sm">View Details</a>
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
+                            <i class="fas fa-user-circle fa-3x text-primary mb-3"></i>
+                            <h5>Profile</h5>
+                            <p class="text-muted">Manage your account settings</p>
+                            <a href="{{ route('profile') }}" class="btn btn-outline-primary">View Profile</a>
                         </div>
                     </div>
                 </div>
-            </div>
-        @endif
-
-        <!-- Quick Actions -->
-        <div class="row mt-5">
-            <div class="col-12">
-                <div class="card shadow-sm">
-                    <div class="card-header">
-                        <h5 class="mb-0">Quick Actions</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row g-3">
-                            <div class="col-md-3">
-                                <a href="{{ url('/products') }}" class="btn btn-outline-primary w-100">
-                                    <i class="me-2">🔍</i>Browse Products
-                                </a>
-                            </div>
-                            <div class="col-md-3">
-                                <a href="{{ url('/products?category=smartphones') }}" class="btn btn-outline-secondary w-100">
-                                    <i class="me-2">📱</i>Smartphones
-                                </a>
-                            </div>
-                            <div class="col-md-3">
-                                <a href="{{ url('/products?category=laptops') }}" class="btn btn-outline-secondary w-100">
-                                    <i class="me-2">💻</i>Laptops
-                                </a>
-                            </div>
-                            <div class="col-md-3">
-                                <a href="{{ url('/products?category=gaming') }}" class="btn btn-outline-secondary w-100">
-                                    <i class="me-2">🎮</i>Gaming
-                                </a>
-                            </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <i class="fas fa-box fa-3x text-success mb-3"></i>
+                            <h5>Orders</h5>
+                            <p class="text-muted">Track your order history</p>
+                            <a href="{{ route('orders') }}" class="btn btn-outline-success">View Orders</a>
                         </div>
                     </div>
                 </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <i class="fas fa-shopping-cart fa-3x text-warning mb-3"></i>
+                            <h5>Cart</h5>
+                            <p class="text-muted">Review items in your cart</p>
+                            <a href="{{ route('cart.index') }}" class="btn btn-outline-warning">View Cart</a>
+                        </div>
+                    </div>
+                </div>
+                @if(Auth::user()->role === 'admin')
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <i class="fas fa-cogs fa-3x text-danger mb-3"></i>
+                                <h5>Admin Panel</h5>
+                                <p class="text-muted">Manage the store</p>
+                                <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-danger">Admin Panel</a>
+                            </div>
+                        </div>
+                    </div>
+                @endif
             </div>
         </div>
-    </div>
+    @else
+        <!-- Hero Section for Guest Users -->
+        <section class="hero-section">
+            <div class="container">
+                <div class="row align-items-center">
+                    <div class="col-lg-6">
+                        <h1 class="display-4 fw-bold mb-4">Welcome to ElectroMart</h1>
+                        <p class="lead mb-4">Discover the latest electronics, gadgets, and tech accessories at unbeatable prices. Your one-stop shop for all things electronic!</p>
+                        <div class="d-flex gap-3">
+                            <a href="{{ route('products.index') }}" class="btn btn-light btn-lg">
+                                <i class="fas fa-shopping-bag"></i> Shop Now
+                            </a>
+                            <a href="{{ route('register') }}" class="btn btn-outline-light btn-lg">
+                                <i class="fas fa-user-plus"></i> Join Us
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <img src="https://via.placeholder.com/600x400/667eea/white?text=Electronics" alt="Electronics" class="img-fluid rounded">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section class="py-5">
+            <div class="container">
+                <div class="row text-center">
+                    <div class="col-md-4 mb-4">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-shipping-fast"></i>
+                        </div>
+                        <h4>Fast Shipping</h4>
+                        <p class="text-muted">Get your electronics delivered quickly with our express shipping options.</p>
+                    </div>
+                    <div class="col-md-4 mb-4">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h4>Secure Shopping</h4>
+                        <p class="text-muted">Shop with confidence knowing your data and payments are secure.</p>
+                    </div>
+                    <div class="col-md-4 mb-4">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-headset"></i>
+                        </div>
+                        <h4>24/7 Support</h4>
+                        <p class="text-muted">Our customer support team is here to help you around the clock.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    @endauth
+
+    <!-- Featured Products Section -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="display-5 fw-bold">Featured Products</h2>
+                <p class="lead text-muted">Check out our latest and most popular items</p>
+            </div>
+
+            <div class="row">
+                @forelse($products as $product)
+                    <div class="col-md-4 mb-4">
+                        <div class="card product-card h-100">
+                            @if($product->image)
+                                <img src="{{ asset('storage/' . $product->image) }}" class="card-img-top" alt="{{ $product->name }}" style="height: 200px; object-fit: cover;">
+                            @else
+                                <img src="https://via.placeholder.com/300x200/f8f9fa/6c757d?text={{ urlencode($product->name) }}" class="card-img-top" alt="{{ $product->name }}" style="height: 200px; object-fit: cover;">
+                            @endif
+                            <div class="card-body d-flex flex-column">
+                                <h5 class="card-title">{{ $product->name }}</h5>
+                                <p class="card-text text-muted flex-grow-1">{{ Str::limit($product->description, 100) }}</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h6 class="text-primary mb-0">${{ number_format($product->price, 2) }}</h6>
+                                    <span class="badge bg-secondary">{{ ucfirst($product->category) }}</span>
+                                </div>
+                                <div class="mt-3">
+                                    <a href="{{ route('products.show', $product) }}" class="btn btn-outline-primary btn-sm me-2">View Details</a>
+                                    <form action="{{ route('cart.add') }}" method="POST" style="display: inline;">
+                                        @csrf
+                                        <input type="hidden" name="product_id" value="{{ $product->id }}">
+                                        <input type="hidden" name="quantity" value="1">
+                                        <button type="submit" class="btn btn-primary btn-sm">
+                                            <i class="fas fa-cart-plus"></i> Add to Cart
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @empty
+                    <div class="col-12 text-center">
+                        <p class="text-muted">No products available at the moment.</p>
+                        @auth
+                            @if(Auth::user()->role === 'admin')
+                                <a href="{{ route('admin.products.create') }}" class="btn btn-primary">Add First Product</a>
+                            @endif
+                        @endauth
+                    </div>
+                @endforelse
+            </div>
+
+            @if($products->count() > 0)
+                <div class="text-center mt-4">
+                    <a href="{{ route('products.index') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-arrow-right"></i> View All Products
+                    </a>
+                </div>
+            @endif
+        </div>
+    </section>
 
     <!-- Footer -->
-    <footer class="bg-dark text-white mt-5 py-4">
+    <footer class="bg-dark text-white py-4 mt-5">
         <div class="container">
             <div class="row">
                 <div class="col-md-6">
-                    <h5>Electro Mart</h5>
-                    <p>Your trusted electronics store since 2024</p>
+                    <h5><i class="fas fa-bolt"></i> ElectroMart</h5>
+                    <p class="text-muted">Your trusted electronics store since 2024.</p>
                 </div>
                 <div class="col-md-6 text-md-end">
-                    <p>&copy; 2024 Electro Mart. All rights reserved.</p>
+                    <p class="text-muted">&copy; 2024 ElectroMart. All rights reserved.</p>
                 </div>
             </div>
         </div>

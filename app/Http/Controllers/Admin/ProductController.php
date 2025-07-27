@@ -3,96 +3,138 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Product;
-use App\Models\Category;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
+use App\Models\Product;
 
 class ProductController extends Controller
 {
+    private function checkAdmin()
+    {
+        if (!Auth::check() || Auth::user()->role !== 'admin') {
+            abort(403, 'Access denied. Admin privileges required.');
+        }
+    }
+
     public function index()
     {
-        $products = Product::with('category')->paginate(10);
+        $this->checkAdmin();
+        $products = Product::all();
         return view('admin.products.index', compact('products'));
     }
 
     public function create()
     {
-        $categories = Category::all();
+        $this->checkAdmin();
+
+        // Define categories as an array since you don't have a Category model yet
+        $categories = [
+            (object)['id' => 'smartphones', 'name' => 'Smartphones'],
+            (object)['id' => 'laptops', 'name' => 'Laptops'],
+            (object)['id' => 'gaming', 'name' => 'Gaming'],
+            (object)['id' => 'accessories', 'name' => 'Accessories'],
+            (object)['id' => 'tablets', 'name' => 'Tablets'],
+            (object)['id' => 'audio', 'name' => 'Audio'],
+            (object)['id' => 'cameras', 'name' => 'Cameras'],
+            (object)['id' => 'computers', 'name' => 'Computers'],
+        ];
+
         return view('admin.products.create', compact('categories'));
     }
 
     public function store(Request $request)
     {
+        $this->checkAdmin();
+
         $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'required|string',
             'price' => 'required|numeric|min:0',
+            'category_id' => 'required|string',
             'stock' => 'required|integer|min:0',
-            'category_id' => 'required|exists:categories,id',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        $data = $request->all();
+        $product = new Product();
+        $product->name = $request->name;
+        $product->description = $request->description;
+        $product->price = $request->price;
+        $product->category = $request->category_id; // Store as category, not category_id
+        $product->stock = $request->stock;
 
         if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('products', 'public');
+            $imagePath = $request->file('image')->store('products', 'public');
+            $product->image = $imagePath;
         }
 
-        Product::create($data);
+        $product->save();
 
-        return redirect()->route('admin.products.index')
-            ->with('success', 'Product created successfully.');
+        return redirect()->route('admin.products.index')->with('success', 'Product created successfully!');
     }
 
-    public function show(Product $product)
+    public function show($id)
     {
-        $product->load('category');
+        $this->checkAdmin();
+        $product = Product::findOrFail($id);
         return view('admin.products.show', compact('product'));
     }
 
-    public function edit(Product $product)
+    public function edit($id)
     {
-        $categories = Category::all();
+        $this->checkAdmin();
+        $product = Product::findOrFail($id);
+
+        // Define categories for edit form as well
+        $categories = [
+            (object)['id' => 'smartphones', 'name' => 'Smartphones'],
+            (object)['id' => 'laptops', 'name' => 'Laptops'],
+            (object)['id' => 'gaming', 'name' => 'Gaming'],
+            (object)['id' => 'accessories', 'name' => 'Accessories'],
+            (object)['id' => 'tablets', 'name' => 'Tablets'],
+            (object)['id' => 'audio', 'name' => 'Audio'],
+            (object)['id' => 'cameras', 'name' => 'Cameras'],
+            (object)['id' => 'computers', 'name' => 'Computers'],
+        ];
+
         return view('admin.products.edit', compact('product', 'categories'));
     }
 
-    public function update(Request $request, Product $product)
+    public function update(Request $request, $id)
     {
+        $this->checkAdmin();
+
         $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'required|string',
             'price' => 'required|numeric|min:0',
+            'category_id' => 'required|string',
             'stock' => 'required|integer|min:0',
-            'category_id' => 'required|exists:categories,id',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        $data = $request->all();
+        $product = Product::findOrFail($id);
+        $product->name = $request->name;
+        $product->description = $request->description;
+        $product->price = $request->price;
+        $product->category = $request->category_id;
+        $product->stock = $request->stock;
 
         if ($request->hasFile('image')) {
-            // Delete old image
-            if ($product->image) {
-                Storage::disk('public')->delete($product->image);
-            }
-            $data['image'] = $request->file('image')->store('products', 'public');
+            $imagePath = $request->file('image')->store('products', 'public');
+            $product->image = $imagePath;
         }
 
-        $product->update($data);
+        $product->save();
 
-        return redirect()->route('admin.products.index')
-            ->with('success', 'Product updated successfully.');
+        return redirect()->route('admin.products.index')->with('success', 'Product updated successfully!');
     }
 
-    public function destroy(Product $product)
+    public function destroy($id)
     {
-        if ($product->image) {
-            Storage::disk('public')->delete($product->image);
-        }
-
+        $this->checkAdmin();
+        $product = Product::findOrFail($id);
         $product->delete();
 
-        return redirect()->route('admin.products.index')
-            ->with('success', 'Product deleted successfully.');
+        return redirect()->route('admin.products.index')->with('success', 'Product deleted successfully!');
     }
 }

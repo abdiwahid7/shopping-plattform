@@ -12,19 +12,14 @@ class Product extends Model
     protected $fillable = [
         'name',
         'description',
+        'category',  // Only this, not category_id
         'price',
         'stock',
-        'category_id',
-        'image'
+        'image',
     ];
 
-    public function category()
-    {
-        return $this->belongsTo(Category::class);
-    }
-
-    public function orderItems()
-    {
-        return $this->hasMany(OrderItem::class);
-    }
+    protected $casts = [
+        'price' => 'decimal:2',
+        'stock' => 'integer',
+    ];
 }
