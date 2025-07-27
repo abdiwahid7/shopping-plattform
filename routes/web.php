@@ -66,6 +66,9 @@ Route::middleware(['auth'])->group(function () {
     // Checkout Routes
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
     Route::post('/checkout', [CheckoutController::class, 'process'])->name('checkout.process');
+    Route::get('/checkout/success', function () {
+    return view('checkout.success');
+})->name('checkout.success');
 });
 
 // Admin Routes

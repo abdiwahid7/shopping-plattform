@@ -42,14 +42,21 @@
 
                 <ul class="navbar-nav ms-auto">
                     <!-- Cart -->
-                    <li class="nav-item">
-                        <a class="nav-link position-relative active" href="{{ url('/cart') }}">
-                            🛒 Cart
-                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                {{ array_sum(array_column($cart, 'quantity')) }}
-                            </span>
-                        </a>
-                    </li>
+<li class="nav-item">
+    <a class="nav-link position-relative active" href="{{ url('/cart') }}">
+        🛒 Cart
+        @php
+            $cartCount = 0;
+            if(Session::has('cart')) {
+                $cart = Session::get('cart');
+                $cartCount = array_sum(array_column($cart, 'quantity'));
+            }
+        @endphp
+        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+            {{ $cartCount }}
+        </span>
+    </a>
+</li>
 
                     <!-- Authentication Links -->
                     @guest
