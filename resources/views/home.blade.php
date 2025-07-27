@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ config('app.name') }}</title>
+    <title>Dashboard - {{ config('app.name') }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
 </head>
@@ -22,10 +22,10 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->is('/') ? 'active' : '' }}" href="{{ url('/') }}">Home</a>
+                        <a class="nav-link" href="{{ url('/') }}">Home</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->is('products*') ? 'active' : '' }}" href="{{ url('/products') }}">Products</a>
+                        <a class="nav-link" href="{{ url('/products') }}">Products</a>
                     </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
@@ -76,6 +76,15 @@
                             <a class="nav-link" href="{{ url('/register') }}">Register</a>
                         </li>
                     @else
+                        <!-- Admin Panel Link (only for admin users) -->
+                        @if(Auth::user()->role === 'admin')
+                            <li class="nav-item">
+                                <a class="nav-link text-warning" href="{{ route('admin.dashboard') }}">
+                                    <strong>⚙️ Admin Panel</strong>
+                                </a>
+                            </li>
+                        @endif
+
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                                 {{ Auth::user()->name }}
@@ -84,6 +93,10 @@
                                 <li><a class="dropdown-item" href="{{ url('/dashboard') }}">Dashboard</a></li>
                                 <li><a class="dropdown-item" href="{{ url('/profile') }}">Profile</a></li>
                                 <li><a class="dropdown-item" href="{{ url('/orders') }}">Orders</a></li>
+                                @if(Auth::user()->role === 'admin')
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item text-warning" href="{{ route('admin.dashboard') }}">Admin Panel</a></li>
+                                @endif
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
                                     <a class="dropdown-item" href="{{ url('/logout') }}"
@@ -102,56 +115,195 @@
         </div>
     </nav>
 
-    <!-- Hero Section -->
-    <div class="bg-primary text-white py-5">
-        <div class="container text-center">
-            <h1 class="display-4 fw-bold">Welcome to Electro Mart</h1>
-            <p class="lead">Your one-stop shop for all electronic needs</p>
-            <a href="{{ url('/products') }}" class="btn btn-light btn-lg">Shop Now</a>
+    <!-- Welcome Header -->
+    <div class="bg-primary text-white py-4">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="display-6 fw-bold mb-2">Welcome back, {{ Auth::user()->name }}! 👋</h1>
+                    <p class="lead mb-0">Manage your account, track orders, and discover new products</p>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <span class="badge bg-light text-primary fs-6">{{ ucfirst(Auth::user()->role) }} Account</span>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Main Content -->
+    <!-- Dashboard Content -->
     <div class="container my-5">
-        <h2 class="text-center mb-4">Featured Products</h2>
+        <!-- Quick Stats -->
+        <div class="row g-4 mb-5">
+            <div class="col-md-3">
+                <div class="card text-center border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                            <span class="h4 mb-0">📦</span>
+                        </div>
+                        <h4 class="mt-3 mb-1">{{ Auth::user()->orders()->count() }}</h4>
+                        <p class="text-muted mb-0">Total Orders</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                            <span class="h4 mb-0">✅</span>
+                        </div>
+                        <h4 class="mt-3 mb-1">{{ Auth::user()->orders()->where('status', 'delivered')->count() }}</h4>
+                        <p class="text-muted mb-0">Delivered</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="bg-warning text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                            <span class="h4 mb-0">🚚</span>
+                        </div>
+                        <h4 class="mt-3 mb-1">{{ Auth::user()->orders()->whereIn('status', ['pending', 'processing', 'shipped'])->count() }}</h4>
+                        <p class="text-muted mb-0">In Progress</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="bg-info text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                            <span class="h4 mb-0">💰</span>
+                        </div>
+                        <h4 class="mt-3 mb-1">${{ number_format(Auth::user()->orders()->sum('total_amount'), 2) }}</h4>
+                        <p class="text-muted mb-0">Total Spent</p>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-        @if($products->count() > 0)
-            <div class="row g-4">
-                @foreach($products as $product)
-                    <div class="col-lg-4 col-md-6">
-                        <div class="card h-100 shadow-sm">
-                            @if($product->image)
-                                <img src="{{ asset('storage/' . $product->image) }}" class="card-img-top" alt="{{ $product->name }}" style="height: 200px; object-fit: cover;">
-                            @else
-                                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
-                                    <span class="text-muted">No Image</span>
-                                </div>
-                            @endif
-                            <div class="card-body d-flex flex-column">
-                                <h5 class="card-title">{{ $product->name }}</h5>
-                                <p class="card-text text-muted">{{ Str::limit($product->description, 100) }}</p>
-                                <div class="mt-auto">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <span class="h5 text-primary mb-0">${{ number_format($product->price, 2) }}</span>
-                                        <small class="text-muted">Stock: {{ $product->stock }}</small>
-                                    </div>
-                                    <div class="mt-2">
-                                        <a href="{{ url('/products/' . $product->id) }}" class="btn btn-primary btn-sm">View Details</a>
-                                        <button class="btn btn-outline-primary btn-sm" onclick="addToCart({{ $product->id }})">Add to Cart</button>
-                                    </div>
-                                </div>
+        <!-- Main Dashboard Cards -->
+        <div class="row g-4 mb-5">
+            <div class="col-lg-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                            <span class="display-6">👤</span>
+                        </div>
+                        <h5 class="card-title">My Profile</h5>
+                        <p class="card-text text-muted">Update your personal information, change password, and manage account settings</p>
+                        <a href="{{ url('/profile') }}" class="btn btn-primary">Manage Profile</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                            <span class="display-6">📋</span>
+                        </div>
+                        <h5 class="card-title">My Orders</h5>
+                        <p class="card-text text-muted">Track your current orders, view order history, and download invoices</p>
+                        <a href="{{ url('/orders') }}" class="btn btn-success">View Orders</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                            <span class="display-6">🛒</span>
+                        </div>
+                        <h5 class="card-title">Shopping Cart</h5>
+                        <p class="card-text text-muted">Review items in your cart and proceed to checkout when ready</p>
+                        <a href="{{ url('/cart') }}" class="btn btn-warning">View Cart</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Orders -->
+        @if(Auth::user()->orders()->count() > 0)
+            <div class="row">
+                <div class="col-12">
+                    <div class="card shadow-sm">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Recent Orders</h5>
+                            <a href="{{ url('/orders') }}" class="btn btn-primary btn-sm">View All Orders</a>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Order #</th>
+                                            <th>Date</th>
+                                            <th>Total</th>
+                                            <th>Status</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach(Auth::user()->orders()->latest()->take(5)->get() as $order)
+                                            <tr>
+                                                <td><strong>#{{ $order->id }}</strong></td>
+                                                <td>{{ $order->created_at->format('M d, Y') }}</td>
+                                                <td><strong>${{ number_format($order->total_amount, 2) }}</strong></td>
+                                                <td>
+                                                    <span class="badge bg-{{
+                                                        $order->status == 'delivered' ? 'success' :
+                                                        ($order->status == 'cancelled' ? 'danger' :
+                                                        ($order->status == 'shipped' ? 'info' : 'warning'))
+                                                    }}">
+                                                        {{ ucfirst($order->status) }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <a href="{{ url('/orders/' . $order->id) }}" class="btn btn-outline-primary btn-sm">View Details</a>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
-                @endforeach
-            </div>
-        @else
-            <div class="text-center py-5">
-                <h4>No products available at the moment</h4>
-                <p class="text-muted">Please check back later!</p>
-                <a href="{{ url('/products') }}" class="btn btn-primary">Browse All Products</a>
+                </div>
             </div>
         @endif
+
+        <!-- Quick Actions -->
+        <div class="row mt-5">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header">
+                        <h5 class="mb-0">Quick Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <a href="{{ url('/products') }}" class="btn btn-outline-primary w-100">
+                                    <i class="me-2">🔍</i>Browse Products
+                                </a>
+                            </div>
+                            <div class="col-md-3">
+                                <a href="{{ url('/products?category=smartphones') }}" class="btn btn-outline-secondary w-100">
+                                    <i class="me-2">📱</i>Smartphones
+                                </a>
+                            </div>
+                            <div class="col-md-3">
+                                <a href="{{ url('/products?category=laptops') }}" class="btn btn-outline-secondary w-100">
+                                    <i class="me-2">💻</i>Laptops
+                                </a>
+                            </div>
+                            <div class="col-md-3">
+                                <a href="{{ url('/products?category=gaming') }}" class="btn btn-outline-secondary w-100">
+                                    <i class="me-2">🎮</i>Gaming
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Footer -->
@@ -170,11 +322,5 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        function addToCart(productId) {
-            // Add to cart functionality - you can implement this later
-            alert('Product added to cart! (Feature coming soon)');
-        }
-    </script>
 </body>
 </html>

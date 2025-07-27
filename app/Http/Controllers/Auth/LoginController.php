@@ -1,19 +1,32 @@
 <?php
+
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\ValidationException;
 
 class LoginController extends Controller
 {
+    use AuthenticatesUsers;
+
     /**
      * Where to redirect users after login.
      *
      * @var string
      */
     protected $redirectTo = '/dashboard';
+
+    /**
+     * Create a new controller instance.
+     *
+     * @return void
+     */
+    public function __construct()
+    {
+        $this->middleware('guest')->except('logout');
+    }
 
     /**
      * Show the application's login form.
@@ -30,47 +43,66 @@ class LoginController extends Controller
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\Response|\Illuminate\Http\JsonResponse
-     *
-     * @throws \Illuminate\Validation\ValidationException
      */
     public function login(Request $request)
     {
         $this->validateLogin($request);
 
-        // Attempt to log the user in
-        if (Auth::attempt($request->only('email', 'password'), $request->boolean('remember'))) {
+        if ($this->attemptLogin($request)) {
             $request->session()->regenerate();
 
-            return redirect()->intended($this->redirectTo);
+            // Redirect based on user role
+            if (Auth::user()->role === 'admin') {
+                return redirect()->intended('/admin/dashboard');
+            }
+
+            return redirect()->intended('/dashboard');
         }
 
-        // If the login attempt was unsuccessful
-        throw ValidationException::withMessages([
-            'email' => [trans('auth.failed')],
-        ]);
+        return $this->sendFailedLoginResponse($request);
     }
 
     /**
-     * Validate the user login request.
+     * Show the application's registration form.
+     *
+     * @return \Illuminate\View\View
+     */
+    public function showRegistrationForm()
+    {
+        return view('auth.register');
+    }
+
+    /**
+     * Handle a registration request for the application.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return void
-     *
-     * @throws \Illuminate\Validation\ValidationException
+     * @return \Illuminate\Http\RedirectResponse
      */
-    protected function validateLogin(Request $request)
+    public function register(Request $request)
     {
         $request->validate([
-            'email' => 'required|string|email',
-            'password' => 'required|string',
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
+
+        $user = \App\Models\User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => bcrypt($request->password),
+            'role' => 'user', // Default role
+        ]);
+
+        Auth::login($user);
+
+        return redirect('/dashboard');
     }
 
     /**
      * Log the user out of the application.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\Response
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function logout(Request $request)
     {

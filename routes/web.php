@@ -1,81 +1,20 @@
 <?php
+
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\Auth\LoginController;
-use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
-use App\Http\Controllers\Admin\CategoryController;
-use App\Http\Controllers\Admin\OrderController;
-use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\OrderController as AdminOrderController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 
 // Public Routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
-Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.show');
-
-// Cart Routes
-Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
-Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
-Route::post('/cart/remove', [CartController::class, 'remove'])->name('cart.remove');
-Route::post('/cart/update', [CartController::class, 'update'])->name('cart.update');
-Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
-
-// Authentication Routes - Guest only
-Route::middleware('guest')->group(function () {
-    Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
-    Route::post('/login', [LoginController::class, 'login']);
-    Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
-    Route::post('/register', [RegisterController::class, 'register']);
-});
-
-// Logout route - Authenticated users only
-Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth');
-
-// Protected Routes - Authenticated users only
-Route::middleware('auth')->group(function () {
-    // User Dashboard
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
-
-    // User Profile
-    Route::get('/profile', function () {
-        return view('profile');
-    })->name('profile');
-
-    // User Orders
-    Route::get('/orders', function () {
-        return view('orders');
-    })->name('orders');
-
-    // Checkout Routes
-    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
-    Route::post('/checkout', [CheckoutController::class, 'process'])->name('checkout.process');
-    Route::get('/checkout/success', [CheckoutController::class, 'success'])->name('checkout.success');
-});
-
-// Admin Routes - Admin users only
-Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(function () {
-    // Admin Dashboard
-    Route::get('/dashboard', function () {
-        return view('admin.dashboard');
-    })->name('dashboard');
-
-    // Admin Product Management
-    Route::resource('products', AdminProductController::class);
-
-    // Admin Category Management
-    Route::resource('categories', CategoryController::class);
-
-    // Admin Order Management
-    Route::resource('orders', OrderController::class);
-
-    // Admin User Management
-    Route::resource('users', UserController::class);
-});
+Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
 
 // Static Pages
 Route::get('/about', function () {
@@ -86,32 +25,60 @@ Route::get('/contact', function () {
     return view('pages.contact');
 })->name('contact');
 
-// Search Route
-Route::get('/search', [ProductController::class, 'search'])->name('search');
+// Cart Routes
+Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
+Route::post('/cart/update', [CartController::class, 'update'])->name('cart.update');
+Route::post('/cart/remove', [CartController::class, 'remove'])->name('cart.remove');
+Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
 
-// Category Filter Route
-Route::get('/category/{category}', [ProductController::class, 'category'])->name('products.category');
+// Authentication Routes
+Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [LoginController::class, 'login']);
+Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+Route::get('/register', [LoginController::class, 'showRegistrationForm'])->name('register');
+Route::post('/register', [LoginController::class, 'register']);
 
-// Wishlist Routes (for authenticated users)
-Route::middleware('auth')->group(function () {
-    Route::get('/wishlist', function () {
-        return view('wishlist');
-    })->name('wishlist');
-    Route::post('/wishlist/add', function () {
-        // Add to wishlist logic
-    })->name('wishlist.add');
-    Route::post('/wishlist/remove', function () {
-        // Remove from wishlist logic
-    })->name('wishlist.remove');
+// Protected Routes (Authenticated Users Only)
+Route::middleware(['auth'])->group(function () {
+    // Check user role and redirect accordingly
+    Route::get('/dashboard', function () {
+        if (auth()->user()->role === 'admin') {
+            return redirect()->route('admin.dashboard');
+        }
+        return view('dashboard');
+    })->name('dashboard');
+
+    // Regular User Routes
+    Route::get('/profile', function () {
+        return view('profile');
+    })->name('profile');
+
+    Route::get('/orders', function () {
+        return view('orders');
+    })->name('orders');
+
+    // Checkout Routes
+    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
+    Route::post('/checkout', [CheckoutController::class, 'process'])->name('checkout.process');
 });
 
-// API Routes for AJAX calls
-Route::prefix('api')->group(function () {
-    Route::post('/cart/count', [CartController::class, 'count'])->name('api.cart.count');
-    Route::get('/products/search', [ProductController::class, 'apiSearch'])->name('api.products.search');
-});
+// Admin Routes (Admin users only) - Using the admin middleware
+Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(function () {
+    // Admin Dashboard
+    Route::get('/dashboard', function () {
+        return view('admin.dashboard');
+    })->name('dashboard');
 
-// Fallback route for 404 errors
-Route::fallback(function () {
-    return view('errors.404');
+    // Admin Product Management
+    Route::resource('products', AdminProductController::class);
+
+    // Admin Order Management
+    Route::resource('orders', AdminOrderController::class);
+
+    // Admin User Management
+    Route::resource('users', AdminUserController::class)->except(['create', 'store']);
+
+    // Admin Category Management
+    Route::resource('categories', AdminCategoryController::class);
 });
