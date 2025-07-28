@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Category;
 
 class Product extends Model
 {
@@ -12,7 +13,7 @@ class Product extends Model
     protected $fillable = [
         'name',
         'description',
-        'category',  // Only this, not category_id
+        'category_id',
         'price',
         'stock',
         'image',
@@ -22,4 +23,9 @@ class Product extends Model
         'price' => 'decimal:2',
         'stock' => 'integer',
     ];
+
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
 }
